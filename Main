@@ -1,0 +1,244 @@
+import telebot
+import sqlite3
+import random
+import os
+from telebot import types
+
+word = ""
+f = []
+miss = 0
+token = "5356109124:AAGoLD2olTMNbpwVBNeEWQZRsVmSvFEWuLE"
+
+bot = telebot.TeleBot(token)
+
+fil_photo = {
+    1: open(os.path.join('C:', 'first.png'), 'rb'),
+    2: open(os.path.join('C:', 'second.png'), 'rb'),
+    3: open(os.path.join('C:', 'third.png'), 'rb'),
+    4: open(os.path.join('C:', 'fourth.png'), 'rb'),
+    5: open(os.path.join('C:', 'fifth.png'), 'rb'),
+    6: open(os.path.join('C:', 'sixth.png'), 'rb'),
+    7: open(os.path.join('C:', 'seventh.png'), 'rb'),
+    8: open(os.path.join('C:', 'eighth.png'), 'rb'),
+    9: open(os.path.join('C:', 'nineth.png'), 'rb'),
+    10: open(os.path.join('C:', 'tenth.png'), 'rb'),
+}
+
+keyboard = types.InlineKeyboardMarkup()
+key_bot = types.InlineKeyboardButton(text="С ботом", callback_data="BOT")
+key_friend = types.InlineKeyboardButton(text="С другом", callback_data="FRIEND")
+keyboard.add(key_bot)
+keyboard.add(key_friend)
+
+kboard = types.InlineKeyboardMarkup()
+fruit = types.InlineKeyboardButton(text="Фрукты и ягоды", callback_data="fruits")
+it = types.InlineKeyboardButton(text="IT", callback_data="iit")
+space = types.InlineKeyboardButton(text="Космос", callback_data="spaace")
+kboard.add(fruit)
+kboard.add(it)
+kboard.add(space)
+
+spaceboard = types.InlineKeyboardMarkup()
+l1 = types.InlineKeyboardButton(text="Уровень 1", callback_data="spacelevel1")
+l2 = types.InlineKeyboardButton(text="Уровень 2", callback_data="spacelevel2")
+l3 = types.InlineKeyboardButton(text="Уровень 3", callback_data="spacelevel3")
+spaceboard.add(l1)
+spaceboard.add(l2)
+spaceboard.add(l3)
+
+fruitboard = types.InlineKeyboardMarkup()
+f1 = types.InlineKeyboardButton(text="Уровень 1", callback_data="fruitlevel1")
+f2 = types.InlineKeyboardButton(text="Уровень 2", callback_data="fruitlevel2")
+f3 = types.InlineKeyboardButton(text="Уровень 3", callback_data="fruitlevel3")
+fruitboard.add(f1)
+fruitboard.add(f2)
+fruitboard.add(f3)
+
+itboard = types.InlineKeyboardMarkup()
+i1 = types.InlineKeyboardButton(text="Уровень 1", callback_data="itlevel1")
+i2 = types.InlineKeyboardButton(text="Уровень 2", callback_data="itlevel2")
+i3 = types.InlineKeyboardButton(text="Уровень 3", callback_data="itlevel3")
+itboard.add(i1)
+itboard.add(i2)
+itboard.add(i3)
+
+
+@bot.message_handler(commands=['start'])
+def start_message(message):
+    bot.send_message(message.chat.id, "Привет, меня завут Gallows!")
+    bot.send_message(message.chat.id, "Выбери вариант игры:", reply_markup=keyboard)
+
+
+def game(message, word):
+    global f
+    print(f)
+    bot.send_message(message.chat.id, text=' '.join(f))
+
+    msg = bot.send_message(message.chat.id, "Введите букву!")
+    bot.register_next_step_handler(msg, check)
+
+
+def check(message):
+    global word
+    global f
+    global miss
+    global fil_photo
+
+    c = message.text
+    if c == "стоп" or c == "Стоп":
+        bot.send_message(message.chat.id, "До встречи!")
+        exit()
+    if len(c) > 1:
+        bot.send_message(message.chat.id, "По одной букве!")
+    elif c in word:
+        bot.send_message(message.chat.id, "Есть такая буква!")
+        k = 0
+        for i in word:
+            if i == c:
+                f[k] = c
+            k += 1
+        if f.count("_") == 0:
+            bot.send_message(message.chat.id, "ПОБЕДА!")
+            exit()
+    else:
+        miss += 1
+        bot.send_photo(message.chat.id, fil_photo[miss])
+        if miss == 10:
+            bot.send_message(message.chat.id, "ИГРА ОКОНЧЕНА(")
+            exit()
+    game(message, word)
+
+
+@bot.message_handler(content_types=['text'])
+def bot_choose(message):
+    bot.send_message(message.chat.id, "Выбери категорию:", reply_markup=kboard)
+
+
+def space_choose(message):
+    bot.send_message(message.chat.id, "Выбери уровень сложности:", reply_markup=spaceboard)
+
+
+def fruit_choose(message):
+    bot.send_message(message.chat.id, "Выбери уровень сложности:", reply_markup=fruitboard)
+
+
+def it_choose(message):
+    bot.send_message(message.chat.id, "Выбери уровень сложности:", reply_markup=itboard)
+
+
+def cosmos(message, n):
+    global word
+    con = sqlite3.connect('gallows_db.sqlite')
+
+    cur = con.cursor()
+    if n == 1:
+        res = cur.execute("""SELECT "1 level" FROM Космос WHERE id = ?""", (random.randint(1, 53),)).fetchone()
+    if n == 2:
+        res = cur.execute("""SELECT "2 level" FROM Космос WHERE id = ?""", (random.randint(1, 11),)).fetchone()
+    if n == 3:
+        res = cur.execute("""SELECT "3 level" FROM Космос WHERE id = ?""", (random.randint(1, 12),)).fetchone()
+    word = res[0]
+    print(word)
+    global f
+    global miss
+    miss = 0
+    f = ["_"] * len(word)
+    game(message, word)
+
+
+def aiti(message, n):
+    global word
+    con = sqlite3.connect('gallows_db.sqlite')
+
+    cur = con.cursor()
+    if n == 1:
+        res = cur.execute("""SELECT "1 level" FROM "фрукты и ягоды" WHERE id = ?""",
+                          (random.randint(1, 23),)).fetchone()
+    if n == 2:
+        res = cur.execute("""SELECT "2 level" FROM "фрукты и ягоды" WHERE id = ?""",
+                          (random.randint(1, 10),)).fetchone()
+    if n == 3:
+        res = cur.execute("""SELECT "3 level" FROM "фрукты и ягоды" WHERE id = ?""",
+                          (random.randint(1, 25),)).fetchone()
+    word = res[0]
+    print(word)
+    global f
+    global miss
+    miss = 0
+    f = ["_"] * len(word)
+    game(message, word)
+
+
+def fructi(message, n):
+    global word
+    con = sqlite3.connect('gallows_db.sqlite')
+
+    cur = con.cursor()
+    if n == 1:
+        res = cur.execute("""SELECT "1 level" FROM IT WHERE id = ?""", (random.randint(1, 42),)).fetchone()
+    if n == 2:
+        res = cur.execute("""SELECT "2 level" FROM IT WHERE id = ?""", (random.randint(1, 56),)).fetchone()
+    if n == 3:
+        res = cur.execute("""SELECT "3 level" FROM IT WHERE id = ?""", (random.randint(1, 22),)).fetchone()
+    word = res[0]
+    print(word)
+    global f
+    global miss
+    miss = 0
+    f = ["_"] * len(word)
+    game(message, word)
+
+
+def wordd(message):
+    global word
+    word = message.text
+    print(word)
+    global f
+    global miss
+    miss = 0
+    f = ["_"] * len(word)
+    game(message, word)
+
+
+def friend_play(message):
+    msg = bot.send_message(message.chat.id, "Введите слово!")
+    bot.register_next_step_handler(msg, wordd)
+
+
+@bot.callback_query_handler(func=lambda call: True)
+def callback_worker(call):
+    if call.data == "BOT":
+        bot_choose(call.message)
+    elif call.data == "FRIEND":
+        friend_play(call.message)
+
+    elif call.data == "fruits":
+        fruit_choose(call.message)
+    elif call.data == "iit":
+        it_choose(call.message)
+    elif call.data == "spaace":
+        space_choose(call.message)
+
+    elif call.data == "spacelevel1":
+        cosmos(call.message, 1)
+    elif call.data == "spacelevel2":
+        cosmos(call.message, 2)
+    elif call.data == "spacelevel3":
+        cosmos(call.message, 3)
+
+    elif call.data == "fruitlevel1":
+        fructi(call.message, 1)
+    elif call.data == "fruitlevel2":
+        fructi(call.message, 2)
+    elif call.data == "fruitlevel3":
+        fructi(call.message, 3)
+
+    elif call.data == "itlevel1":
+        aiti(call.message, 1)
+    elif call.data == "itlevel2":
+        aiti(call.message, 2)
+    elif call.data == "itlevel3":
+        aiti(call.message, 3)
+
+
+bot.polling(none_stop=True)
